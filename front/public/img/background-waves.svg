@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900" fill="none">
+  <rect width="1440" height="900" fill="url(#bg)" />
+  <path
+    d="M0 260C180 320 360 360 540 340C720 320 900 240 1080 240C1260 240 1440 300 1440 300V900H0V260Z"
+    fill="url(#wave1)"
+    opacity="0.45"
+  />
+  <path
+    d="M0 360C200 420 400 460 600 440C800 420 1000 340 1200 340C1400 340 1440 360 1440 360V900H0V360Z"
+    fill="url(#wave2)"
+    opacity="0.55"
+  />
+  <path
+    d="M0 480C220 540 440 580 660 560C880 540 1100 460 1320 460C1440 460 1440 460 1440 460V900H0V480Z"
+    fill="url(#wave3)"
+    opacity="0.7"
+  />
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1440" y2="900" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1D4ED8" />
+      <stop offset="1" stop-color="#0EA5E9" />
+    </linearGradient>
+    <linearGradient id="wave1" x1="0" y1="240" x2="1440" y2="520" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" stop-opacity="0.55" />
+      <stop offset="1" stop-color="#E0F2FE" stop-opacity="0.4" />
+    </linearGradient>
+    <linearGradient id="wave2" x1="0" y1="320" x2="1440" y2="620" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#EFF6FF" stop-opacity="0.6" />
+      <stop offset="1" stop-color="#C7D2FE" stop-opacity="0.45" />
+    </linearGradient>
+    <linearGradient id="wave3" x1="0" y1="420" x2="1440" y2="720" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" stop-opacity="0.6" />
+      <stop offset="1" stop-color="#DBEAFE" stop-opacity="0.5" />
+    </linearGradient>
+  </defs>
+</svg>
+

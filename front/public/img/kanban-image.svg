@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-labelledby="title desc">
+  <title id="title">Kanban Login Companion – Previous Style</title>
+  <desc id="desc">Three vertical rounded bars with a tilted card and a floating plus badge. Transparent background.</desc>
+  <defs>
+    <style>
+      :root{
+        --teal:#48A89C;
+        --orange:#E49A3A;
+        --blue:#4B8EC3;
+        --badge:#C83D6B;
+        --plus:#F6C354;
+        --card:#F1D39A;
+        --cardLine:#D1AF6B;
+        --stroke:rgba(0,0,0,.08);
+        --shadow:rgba(10,10,10,.12);
+      }
+      .soft-shadow{ filter:url(#shadow); }
+    </style>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="var(--shadow)"/>
+    </filter>
+  </defs>
+
+  <!-- Bars group -->
+  <g transform="translate(86,110)">
+    <rect x="40"  y="30" width="86" height="260" rx="22" fill="var(--teal)"  class="soft-shadow" />
+    <rect x="160" y="10" width="86" height="300" rx="22" fill="var(--orange)" class="soft-shadow" />
+    <rect x="280" y="30" width="86" height="260" rx="22" fill="var(--blue)"   class="soft-shadow" />
+
+    <!-- Tilted card on the left -->
+    <g transform="translate(8,160) rotate(-14)">
+      <rect x="0" y="0" width="130" height="90" rx="18" fill="var(--card)" class="soft-shadow" />
+      <rect x="20" y="30" width="90" height="14" rx="7" fill="var(--cardLine)" />
+      <rect x="20" y="54" width="66" height="12" rx="6" fill="var(--cardLine)" />
+    </g>
+
+    <!-- Floating plus badge -->
+    <g transform="translate(360,-30)">
+      <circle cx="0" cy="0" r="52" fill="var(--badge)" class="soft-shadow"/>
+      <path d="M-20 0H20M0-20V20" stroke="var(--plus)" stroke-linecap="round" stroke-width="12"/>
+    </g>
+  </g>
+</svg>

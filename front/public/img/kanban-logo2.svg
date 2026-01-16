@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240" role="img" aria-label="Kanban icon">
+  <defs>
+    <style>
+      .fg { fill: currentColor; }
+      .stroke { fill: none; stroke: currentColor; stroke-width: 14; }
+    </style>
+  </defs>
+
+  <!-- Default color can be overridden by setting 'color' on the <svg> or parent -->
+  <g color="#0F172A">
+    <!-- Rounded square outline -->
+    <rect x="16" y="16" rx="28" ry="28" width="208" height="208" class="stroke"/>
+    <!-- Three Kanban columns -->
+    <rect x="52" y="76" width="32" height="96" rx="8" class="fg"/>
+    <rect x="104" y="60" width="32" height="128" rx="8" class="fg"/>
+    <rect x="156" y="92" width="32" height="64" rx="8" class="fg"/>
+  </g>
+</svg>

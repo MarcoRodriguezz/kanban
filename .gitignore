@@ -1,0 +1,15 @@
+.DS_Store
+
+# env
+.env
+.env.*
+
+# deps
+node_modules/
+**/node_modules/
+
+# build/test
+build/
+dist/
+coverage/
+

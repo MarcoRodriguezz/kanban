@@ -1,0 +1,439 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+enum EstadoTarea {
+  Pendiente
+  En_progreso
+  En_revision
+  Completado
+}
+
+enum RolUsuario {
+  Administrador
+  Empleado
+}
+
+enum EstadoSprint {
+  En_progreso
+  Completado
+  Pendiente
+}
+
+enum EstadoRelease {
+  En_progreso
+  Sin_lanzar
+  Publicado
+}
+
+model Usuario {
+  id                 Int        @id @default(autoincrement())
+  nombreCompleto     String     @db.VarChar(255)
+  email              String     @unique @db.VarChar(255)
+  contraseña        String     @db.VarChar(255) // Hash de la contraseña
+  fotoPerfil         String?    @db.VarChar(500) // URL de la foto de perfil
+  rol                RolUsuario @default(Empleado)
+  resetToken         String?    @db.VarChar(255) // Token hasheado para recuperación de contraseña
+  resetTokenExpiry   DateTime?  @db.DateTime // Fecha de expiración del token
+  refreshToken       String?    @db.VarChar(255) // Token hasheado para refresh
+  refreshTokenExpiry DateTime?  @db.DateTime // Fecha de expiración del refresh token
+  createdAt          DateTime   @default(now()) @db.Timestamp(3)
+  updatedAt          DateTime   @updatedAt @db.Timestamp(3)
+
+  // Relaciones
+  tareas               Tarea[]
+  comentarios          Comentario[]
+  proyectosCreados     Proyecto[]     @relation("ProyectoCreador")
+  proyectosGestionados Proyecto[]     @relation("ProyectoGestor")
+  tareasCreadas        Tarea[]        @relation("TareaCreador")
+  actividades          LogActividad[]
+  tokensGitHubCreados  GitHubToken[]  @relation("GitHubTokenCreador")
+  componentesCreados  Componente[]   @relation("ComponenteCreador")
+  issuesReportados     Issue[]        @relation("IssueReportadoPor")
+  issuesAsignados      Issue[]        @relation("IssueAsignadoA")
+  notificaciones       Notificacion[]
+  proyectosMiembro     ProyectoMiembro[]
+
+  @@index([email])
+  @@index([rol])
+  @@map("usuarios")
+}
+
+model Proyecto {
+  id           Int       @id @default(autoincrement())
+  nombre       String    @db.VarChar(255)
+  descripcion  String?   @db.Text
+  responsable  String    @db.VarChar(255)
+  equipo       String    @db.VarChar(255)
+  fecha_inicio DateTime  @db.DateTime
+  fecha_fin    DateTime? @db.DateTime
+  orden        Int       @default(0) @db.Int
+  createdAt    DateTime  @default(now()) @db.Timestamp(3)
+  updatedAt    DateTime  @updatedAt @db.Timestamp(3)
+
+  creadoPorId Int
+  creadoPor   Usuario @relation("ProyectoCreador", fields: [creadoPorId], references: [id], onDelete: Restrict)
+
+  gestorId Int
+  gestor   Usuario @relation("ProyectoGestor", fields: [gestorId], references: [id], onDelete: Restrict)
+
+  tareas Tarea[]
+  
+  sprints  Sprint[]
+  releases Release[]
+
+  componentes Componente[]
+
+  repositoriosGitHub RepositorioGitHub[]
+
+  tokensGitHub GitHubToken[] @relation("ProyectoGitHubToken")
+
+  notificaciones Notificacion[]
+
+  issues Issue[]
+
+  miembros ProyectoMiembro[]
+
+  @@index([creadoPorId])
+  @@index([gestorId])
+  @@map("proyectos")
+}
+
+model Tarea {
+  id             Int         @id @default(autoincrement())
+  titulo         String      @db.VarChar(255)
+  descripcion    String?     @db.Text
+  estado         EstadoTarea @default(Pendiente)
+  prioridad      String      @db.VarChar(50)
+  asignado_a     String      @db.VarChar(255)
+  fecha_creacion DateTime    @default(now()) @db.Timestamp(3)
+  fecha_limite   DateTime?   @db.DateTime
+
+  proyectoId Int
+  proyecto   Proyecto @relation(fields: [proyectoId], references: [id], onDelete: Cascade)
+
+  usuarioId Int?
+  usuario   Usuario? @relation(fields: [usuarioId], references: [id], onDelete: Restrict)
+
+  creadoPorId Int
+  creadoPor   Usuario @relation("TareaCreador", fields: [creadoPorId], references: [id], onDelete: Restrict)
+
+  archivos    Archivo[]
+  comentarios Comentario[]
+  etiquetas   TareaEtiqueta[]
+  
+  sprintId Int?
+  sprint   Sprint? @relation(fields: [sprintId], references: [id], onDelete: SetNull)
+  releases TareaRelease[]
+  
+  notificaciones Notificacion[]
+
+  createdAt DateTime @default(now()) @db.Timestamp(3)
+  updatedAt DateTime @updatedAt @db.Timestamp(3)
+
+  @@index([proyectoId])
+  @@index([usuarioId])
+  @@index([creadoPorId])
+  @@index([sprintId])
+  @@index([estado])
+  @@index([usuarioId, estado]) // Índice compuesto para consultas filtradas por usuario y estado
+  @@index([proyectoId, estado]) // Índice compuesto para consultas filtradas por proyecto y estado
+  @@map("tareas")
+}
+
+//(adjuntos a tareas)
+model Archivo {
+  id        Int      @id @default(autoincrement())
+  nombre    String   @db.VarChar(255)
+  url       String   @db.VarChar(500)
+  tipo      String?  @db.VarChar(100)
+  tamaño   Int? // tamaño en bytes
+  tareaId   Int
+  tarea     Tarea    @relation(fields: [tareaId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @db.Timestamp(3)
+
+  @@index([tareaId])
+  @@map("archivos")
+}
+
+model Comentario {
+  id        Int    @id @default(autoincrement())
+  contenido String @db.Text
+  tareaId   Int
+  tarea     Tarea  @relation(fields: [tareaId], references: [id], onDelete: Cascade)
+
+  usuarioId Int
+  usuario   Usuario @relation(fields: [usuarioId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now()) @db.Timestamp(3)
+  updatedAt DateTime @updatedAt @db.Timestamp(3)
+
+  @@index([tareaId])
+  @@index([usuarioId])
+  @@map("comentarios")
+}
+
+model Etiqueta {
+  id        Int             @id @default(autoincrement())
+  nombre    String          @unique @db.VarChar(100)
+  color     String?         @db.VarChar(7) // código hexadecimal del color
+  tareas    TareaEtiqueta[]
+  createdAt DateTime        @default(now()) @db.Timestamp(3)
+
+  @@map("etiquetas")
+}
+
+// Tabla relacion n-m entre Tareas y Etiquetas
+model TareaEtiqueta {
+  tareaId    Int
+  etiquetaId Int
+  tarea      Tarea    @relation(fields: [tareaId], references: [id], onDelete: Cascade)
+  etiqueta   Etiqueta @relation(fields: [etiquetaId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now()) @db.Timestamp(3)
+
+  @@id([tareaId, etiquetaId])
+  @@index([tareaId])
+  @@index([etiquetaId])
+  @@map("tarea_etiquetas")
+}
+
+model LogActividad {
+  id            Int      @id @default(autoincrement())
+  accion        String   @db.VarChar(50) // "crear", "actualizar", "eliminar", "cambiar_estado"
+  entidad       String   @db.VarChar(50) // "Tarea", "Proyecto", "Comentario"
+  entidadId     Int
+  campo         String?  @db.VarChar(100) // Campo modificado (ej: "estado", "prioridad")
+  valorAnterior String?  @db.Text
+  valorNuevo    String?  @db.Text
+  descripcion   String?  @db.Text
+  usuarioId     Int
+  usuario       Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Restrict)
+  createdAt     DateTime @default(now()) @db.Timestamp(3)
+
+  @@index([entidad, entidadId])
+  @@index([usuarioId])
+  @@index([createdAt])
+  @@map("log_actividad")
+}
+
+model Sprint {
+  id          Int         @id @default(autoincrement())
+  nombre      String      @db.VarChar(255)
+  descripcion String?     @db.Text
+  fecha_inicio DateTime   @db.DateTime
+  fecha_fin    DateTime   @db.DateTime
+  estado      EstadoSprint @default(Pendiente)
+  
+  proyectoId Int
+  proyecto   Proyecto @relation(fields: [proyectoId], references: [id], onDelete: Cascade)
+  
+  tareas     Tarea[]
+  
+  createdAt  DateTime    @default(now()) @db.Timestamp(3)
+  updatedAt  DateTime    @updatedAt @db.Timestamp(3)
+  
+  @@index([proyectoId])
+  @@index([fecha_inicio, fecha_fin])
+  @@index([estado])
+  @@map("sprints")
+}
+
+model Release {
+  id              Int          @id @default(autoincrement())
+  nombre          String       @db.VarChar(255) // Ej: "Versión 4.0 - Go-live"
+  descripcion     String?      @db.Text
+  fecha_inicio    DateTime     @db.DateTime 
+  fecha_lanzamiento DateTime   @db.DateTime 
+  estado          EstadoRelease @default(Sin_lanzar)
+  
+  proyectoId Int
+  proyecto   Proyecto @relation(fields: [proyectoId], references: [id], onDelete: Cascade)
+  
+  // Relación many-to-many con tareas 
+  tareas     TareaRelease[]
+  
+  createdAt  DateTime     @default(now()) @db.Timestamp(3)
+  updatedAt  DateTime     @updatedAt @db.Timestamp(3)
+  
+  @@index([proyectoId])
+  @@index([fecha_inicio, fecha_lanzamiento])
+  @@index([estado])
+  @@map("releases")
+}
+
+// Tabla relación many-to-many entre Tareas y Releases
+model TareaRelease {
+  tareaId    Int
+  releaseId  Int
+  tarea      Tarea    @relation(fields: [tareaId], references: [id], onDelete: Cascade)
+  release    Release  @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now()) @db.Timestamp(3)
+  
+  @@id([tareaId, releaseId])
+  @@index([tareaId])
+  @@index([releaseId])
+  @@map("tarea_releases")
+}
+
+// Tokens de GitHub cifrados para integración con repositorios
+model GitHubToken {
+  id          Int      @id @default(autoincrement())
+  nombre      String   @db.VarChar(255) // Nombre descriptivo del token (ej: "Token principal")
+  tokenCifrado String  @db.Text // Token cifrado con AES-256-GCM
+  activo      Boolean  @default(true) // Si está activo o no
+  proyectoId  Int      // Proyecto al que pertenece el token
+  proyecto    Proyecto @relation("ProyectoGitHubToken", fields: [proyectoId], references: [id], onDelete: Cascade)
+  creadoPorId Int      // Usuario que creó el token
+  creadoPor   Usuario  @relation("GitHubTokenCreador", fields: [creadoPorId], references: [id], onDelete: Restrict)
+  createdAt   DateTime @default(now()) @db.Timestamp(3)
+  updatedAt   DateTime @updatedAt @db.Timestamp(3)
+
+  @@index([activo])
+  @@index([creadoPorId])
+  @@index([proyectoId])
+  @@map("github_tokens")
+}
+
+// Repositorios de GitHub vinculados a proyectos
+model RepositorioGitHub {
+  id          Int      @id @default(autoincrement())
+  nombre      String   @db.VarChar(255) // Nombre descriptivo (ej: "Backend API")
+  descripcion String?  @db.Text
+  owner       String   @db.VarChar(255) // Propietario del repositorio (ej: "mariatroncososiweb")
+  repo        String   @db.VarChar(255) // Nombre del repositorio (ej: "Kanban")
+  url         String   @db.VarChar(500) // URL completa del repositorio
+  tipo        String   @default("github") @db.VarChar(50) // Tipo: "github", "design", "documentation", "other"
+  activo      Boolean  @default(true) // Si está activo o no (para mostrar commits)
+  
+  proyectoId Int
+  proyecto   Proyecto @relation(fields: [proyectoId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now()) @db.Timestamp(3)
+  updatedAt DateTime @updatedAt @db.Timestamp(3)
+
+  @@index([proyectoId])
+  @@index([activo])
+  @@index([owner, repo]) // Índice compuesto para búsquedas rápidas
+  @@map("repositorios_github")
+}
+
+enum CategoriaComponente {
+  logos
+  iconos
+  ilustraciones
+  fondos
+}
+
+enum CategoriaIssue {
+  Bug
+  Mejora
+  Idea
+  Pregunta
+}
+
+enum EstadoIssue {
+  Abierto
+  En_revision
+  Asignado
+  Resuelto
+}
+
+// Componentes reutilizables (logos, iconos, ilustraciones, fondos)
+model Componente {
+  id          Int                 @id @default(autoincrement())
+  nombre      String               @db.VarChar(255)
+  descripcion String?              @db.Text
+  categoria   CategoriaComponente  @default(logos)
+  preview     String               @db.VarChar(500) 
+  tags        String?              @db.Text 
+  proyectoId  Int?                 
+  proyecto    Proyecto?            @relation(fields: [proyectoId], references: [id], onDelete: SetNull)
+  creadoPorId Int                 
+  creadoPor   Usuario              @relation("ComponenteCreador", fields: [creadoPorId], references: [id], onDelete: Restrict)
+  createdAt   DateTime             @default(now()) @db.Timestamp(3)
+  updatedAt   DateTime             @updatedAt @db.Timestamp(3)
+
+  @@index([proyectoId])
+  @@index([categoria])
+  @@index([creadoPorId])
+  @@index([proyectoId, categoria])
+  @@map("componentes")
+}
+
+model Issue {
+  id          Int           @id @default(autoincrement())
+  titulo      String        @db.VarChar(255)
+  descripcion String?       @db.Text
+  categoria   CategoriaIssue @default(Bug)
+  estado      EstadoIssue   @default(Abierto)
+  prioridad   String        @db.VarChar(50) // 'Alta', 'Media', 'Baja'
+  
+  proyectoId  Int
+  proyecto    Proyecto      @relation(fields: [proyectoId], references: [id], onDelete: Cascade)
+  
+  reportadoPorId Int
+  reportadoPor   Usuario    @relation("IssueReportadoPor", fields: [reportadoPorId], references: [id], onDelete: Restrict)
+  
+  asignadoAId    Int?
+  asignadoA      Usuario?   @relation("IssueAsignadoA", fields: [asignadoAId], references: [id], onDelete: SetNull)
+  
+  notificaciones Notificacion[]
+  
+  createdAt   DateTime      @default(now()) @db.Timestamp(3)
+  updatedAt   DateTime      @updatedAt @db.Timestamp(3)
+
+  @@index([proyectoId])
+  @@index([reportadoPorId])
+  @@index([asignadoAId])
+  @@index([estado])
+  @@index([categoria])
+  @@index([proyectoId, estado])
+  @@map("issues")
+}
+
+model Notificacion {
+  id          Int      @id @default(autoincrement())
+  titulo      String   @db.VarChar(255)
+  descripcion String   @db.Text
+  tipo        String   @db.VarChar(50)
+  leida       Boolean  @default(false)
+  usuarioId   Int
+  usuario     Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  tareaId     Int?
+  tarea       Tarea?   @relation(fields: [tareaId], references: [id], onDelete: Cascade)
+  proyectoId  Int?
+  proyecto    Proyecto? @relation(fields: [proyectoId], references: [id], onDelete: Cascade)
+  issueId     Int?
+  issue       Issue?   @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now()) @db.Timestamp(3)
+  updatedAt   DateTime @updatedAt @db.Timestamp(3)
+
+  @@index([usuarioId, leida])
+  @@index([usuarioId, createdAt])
+  @@index([tareaId])
+  @@index([proyectoId])
+  @@index([issueId])
+  @@map("notificaciones")
+}
+
+// Tabla de miembros del proyecto (many-to-many entre Proyecto y Usuario)
+model ProyectoMiembro {
+  proyectoId Int
+  proyecto   Proyecto @relation(fields: [proyectoId], references: [id], onDelete: Cascade)
+  usuarioId  Int
+  usuario    Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now()) @db.Timestamp(3)
+
+  @@id([proyectoId, usuarioId])
+  @@index([proyectoId])
+  @@index([usuarioId])
+  @@map("proyecto_miembros")
+}

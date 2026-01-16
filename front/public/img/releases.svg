@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Rocket body -->
+  <path d="M12 2c3 2.1 5 5.7 5 9.6 0 3.6-2.4 6.4-5 6.4s-5-2.8-5-6.4C7 7.7 9 4.1 12 2Z"/>
+  <!-- Window -->
+  <circle cx="12" cy="9.5" r="1.6"/>
+  <!-- Fins -->
+  <path d="M9 14.5l-3 1.5M15 14.5l3 1.5"/>
+  <!-- Exhaust / thrust lines -->
+  <path d="M12 18.5v2.5M10.5 19.5l-1 2M13.5 19.5l1 2"/>
+  <!-- Sparkles -->
+  <path d="M4 6h1.5M4.75 5.25v1.5M18.5 6.5h1.5M19.25 5.75v1.5"/>
+</svg>
